@@ -1,0 +1,30 @@
+// Simulator message types.
+// These message types are used for creating objects and controlling the behavior of the simulated world.
+import "base_msgs.proto";
+
+package AssisiMsg;
+
+// Spawn message.
+// This is the argument to the "spawn" command. It contains the necessary information about the object
+// that will be created inside the simulated world.
+message Spawn
+{
+  // Standard message header.
+  optional Header header = 1;
+  // Type of object to spawn.
+  required string type = 2;
+  // Robot name. Must be unique in the simulated world.
+  required string name = 3;
+  // Pose at which to spawn the object.
+  required Pose pose = 4;
+  // Initial object velocity.
+  // This parameter is currently ignored and all objects are spawned with velocity 0.
+  optional Twist velocity = 5;
+  // The polygon describing the object's hull.
+  // Either polygon or cylinder should be specified. If both are specified, cylinder is ignored.
+  optional Polygon polygon = 6;
+  // The cylinder describing the hull of the object.
+  optional Cylinder cylinder = 7;
+  // Object color.
+  optional Color color = 8;
+}

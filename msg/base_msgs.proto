@@ -1,0 +1,138 @@
+// Base message types.
+// These are the base message types. They represent the building-blocks of complex messages.
+// Unless othervise noted, distances are in cm, other units are SI units. Angles are in radians.
+
+package AssisiMsg;
+
+// The timestamp message.
+// Compatible with standard Unix time representation, defined up to nanosecond precision.
+// Accuracy depends on the underlying OS accuracy.
+message Time
+{
+  // Seconds since the Epoch
+  required uint64 sec = 1;
+  // Nanoseconds since seconds
+  required uint64 nsec = 2;
+}
+
+// A message header.
+// Keeps track of time and coordinate systems. Useful when logging messsages.
+message Header
+{
+  // Consecutively increasing ID
+  optional int32 id = 1;
+  // Message timestamp
+  optional Time stamp = 2;
+  // Frame ID (used for coordinate transforms)
+  optional string frame_id = 3;
+}
+
+// A point in Cartesian space.
+message Point
+{
+  // The x coordinate.
+  required double x = 1;
+  // The y coordinate.
+  required double y = 2;
+  // The z coordinate (defaults to 0).
+  optional double z = 3 [default = 0];
+}
+
+// A vector in cartesian space.
+message Vector3
+{
+  required double x = 1;
+  required double y = 2;
+  required double z = 3 [default = 0];
+}
+
+// A Quaternion.
+// Provides infromation about orientation.
+message Quaternion
+{
+  optional double x = 1 [default = 0];
+  optional double y = 2 [default = 0];
+  required double z = 3;
+  optional double w = 4 [default = 1];
+}
+
+// A rigid body pose in Cartesian space.
+// A rigid body pose consist of position and orientation.
+message Pose
+{
+  required Point position = 1;
+  required Quaternion orientation = 2;
+}
+
+// A timestamped pose with coordinate frame ID.
+message PoseStamped
+{
+  optional Header header = 1;
+  required Pose pose = 2;
+}
+
+// Velocity in Cartesian space.
+message Twist
+{
+  // Linear velocity along the three coordinate axes.
+  required Vector3 linear = 1;
+  // Rotational velocity around the three coordinate axes.
+  required Vector3 angular = 2;
+}
+
+// Velocity in Cartesian space, with a header.
+message TwistStamped
+{
+  optional Header header = 1;
+  required Twist twist = 2;
+}
+
+// An RGBA color specification.
+message Color
+{
+  required double red = 1;
+  required double green = 2;
+  required double blue = 3;
+  optional double alpha = 4;
+}
+
+// A color specification with a header.
+message ColorStamped
+{
+  optional Header header = 1;
+  required Color color = 2;
+}
+
+// A 2D polygon with height and mass.
+// This polygon definition is compatible with the Enki simulator. It defines hulls of simulated objects.
+message Polygon
+{
+  // Polygon vertices.
+  repeated Point vertices = 1;
+  // Polygon height.
+  optional double height = 2 [default = 1];
+  // Polygon mass.
+  optional double mass = 3 [default = -1];
+}
+
+// A Polygon with a header.
+message PolygonStamped
+{
+  optional Header header = 1;
+  required Polygon polygon = 2;
+}
+
+// A cylinder with mass. Compatible with Enki.
+message Cylinder
+{
+  required double radius = 1;
+  optional double height = 2 [default = 1];
+  optional double mass = 3 [default = 1];
+}
+
+// A cylinder with a header.
+message CylinderStamped
+{
+  optional Header header = 1;
+  required Cylinder cylinder = 2;
+}

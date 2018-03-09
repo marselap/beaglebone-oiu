@@ -1,0 +1,179 @@
+// Device messages.
+// Messages containing sensor data and actuator commands.
+import "base_msgs.proto";
+
+package AssisiMsg;
+
+// An array of range sensor readings.
+// All sensors are assumed to be identical
+message RangeArray
+{
+  // Message header.
+  optional Header header = 1;
+
+  // Range sensor types.
+  enum SensorType
+  {
+    // Infrared range sensor.
+    IR = 0; 
+  }
+
+  // Type of sensor that made the reading.
+  optional SensorType type = 2 [default = IR];
+  // Sensor Field of view.
+  // Sensor reading is valid between -field_of_view/2 and field_of_view/2 [rad].
+  // Angle 0 is sensor x-axis, default value is 30°.
+  optional float field_of_view = 3 [default = 0.5236]; 
+
+  // Values outside of [min_range, max_range] skould be discarded.
+  optional float min_range = 4 [default = 0]; 
+  optional float max_range = 5 [default = inf];
+  // The actual range readings
+  repeated float range = 6;  
+
+  // Raw vale of the reflected signal
+  repeated float raw_value = 7; 
+  
+}
+
+// Temperature value
+// Can be a sensor reading or an actuator setpoint.
+message Temperature
+{
+  optional Header header = 1;
+  // Temperature value, in °C.
+  required float temp = 2;
+  // Temperature slope (used when setting references)
+  optional float slope = 3;
+}
+
+// Array of Temperature values
+// Bundles readings from several temperature sensors.
+message TemperatureArray
+{
+  optional Header header = 1;
+  // Temperature value, in °C.
+  repeated float temp = 2;
+}
+
+// Temperature with gradient
+// Sensor of temperaure value + gradient
+message TemperatureWithGradient
+{
+  optional Header header = 1;
+  // Temperature value, in C
+  required float temp = 2;
+  // Temperature gradient in C/cm
+  // Relative to the object owning the sensor
+  // Split into x and y directions
+  required float dtx = 3;
+  required float dty = 4;
+}
+
+// Vibration actuator setpoint.
+// 
+message VibrationSetpoint
+{
+  optional Header header = 1;
+  // Vibration frequency
+  required double freq = 2;
+  // Vibration amplitude
+  optional double amplitude = 3;
+}
+
+// Vibration actuator setpoint.
+// 
+message VibrationPattern
+{
+  optional Header header = 1;
+  // Vibration period durations
+  repeated uint32 vibe_periods = 2;
+  // Vibration frequencies
+  repeated double vibe_freqs = 3;
+  // Vibration amplitudes
+  repeated uint32 vibe_amps = 4;
+}
+
+// Vibration sensor reading.
+message VibrationReading
+{
+  optional Header header = 1;
+  // Vibration frequency.
+  repeated float freq = 2;
+  // Vibration amplitude.
+  repeated float amplitude = 3;
+  // Amplitude standard deviation
+  repeated float amplitude_stdev = 4;
+}
+
+// Array of vibration sensor reading.
+// Bundles readings from several vibration sensors.
+message VibrationReadingArray
+{
+  optional Header header = 1;
+  // Frequency values, in Hz
+  repeated VibrationReading reading = 2;
+}
+
+// A message specific to differential drive vehicles.
+// Specifies the vehicles left and right wheel velocity, respectively.
+// Can either be a sensor value, or an actuator command.
+// Velocities are given in cm/s and they represent the tangential velocity,
+// i.e., vel_left = w_left*r, where w is the angular velocity of the wheel
+// in rad/s, and r is the wheel radius, in cm. 
+// The resulting vehicle velocities can be calculated as: 
+// v = (vel_left+vel_right)/2 (linear velocity)
+// w = (vel_right-vel_left)/d (angular velocity),
+// where d is the inter-wheel distance (axle length).
+message DiffDrive
+{
+  optional Header header = 1;
+  // Left wheel velocity.
+  required double vel_left = 2;
+  // Right wheel velocity.
+  required double vel_right = 3;
+}
+
+// An array of object sensor readings.
+// This is a hypothetical sensor, that can determine the distance to an object, and the type of this object. This makes sense for e.g. a bee, which can differentiate between other bees and static obstacles.
+message ObjectArray
+{
+  // Message header.
+  optional Header header = 1;
+
+  // Angle 0 is sensor x-axis, default value is 30°.
+  optional float field_of_view = 3 [default = 0.5236]; 
+
+  // Values outside of [min_range, max_range] skould be discarded.
+  optional float min_range = 4 [default = 0]; 
+  optional float max_range = 5 [default = inf];
+
+  // The actual range readings
+  repeated float range = 6;  
+
+  // Object types that generated the range readings
+  repeated string type = 7;
+
+}  
+
+// Airflow properties
+// Message containing the airflow intensity (in percentage of maximum actuator value)
+// Intended as actuator setpoint.
+// TODO: Rename this message to better reflect its meaning (actuator setpoint only)
+message Airflow
+{
+  optional Header header = 1;
+  // Airflow intensity (maximum actuator value percentage)
+  required float intensity = 2;
+}
+
+// Airflow sensor reading
+message AirflowReading
+{
+  optional Header header = 1;
+  // Airflow intensity in l/s (litres per second)
+  required float intensity = 2;
+  // Airflow direction, in radians,
+  // relative to the sensor heading
+  required float direction = 3;
+}

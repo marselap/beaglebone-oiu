@@ -1,0 +1,25 @@
+#!/bin/sh -e
+#
+# rc.local
+#
+# This script is executed at the end of each multiuser runlevel.
+# Make sure that the script will "exit 0" on success or any other
+# value on error.
+#
+# In order to enable or disable this script just change the execution
+# bits.
+#
+# By default this script does nothing.
+
+
+# Sync with real-time clock
+#source  /usr/share/rtc_ds1307/clock_init.sh
+
+sleep 0.25
+
+# Set mux mask 
+i2cset -y 2 0x70 0x00 0xF
+
+sleep 0.25
+
+exit 0

@@ -1,0 +1,220 @@
+input_vars : 2 
+output_vars : 1 
+
+# A/B 
+variant : A 
+
+# min/product 
+tnorm : min 
+
+# min/product 
+implication : min 
+
+# COG/COA 
+defuzzification : COG 
+
+# sum/max/~ 
+aggregation : sum 
+
+inputVar1 : e 
+inputVar2 : de 
+outputVar1 : ufc 
+
+inputVar1MFS : 
+    - name : lne
+      left : -100
+      maximum : -8
+      right : -4
+    - name : sne
+      left : -8
+      maximum : -4
+      right : 0
+    - name : ze
+      left : -4
+      maximum : 0
+      right : 4
+    - name : spe
+      left : 0
+      maximum : 4
+      right : 8
+    - name : lpe
+      left : 4
+      maximum : 8
+      right : 100
+
+inputVar2MFS : 
+    - name : lnde
+      left : -10
+      maximum : -0.5
+      right : -0.1
+    - name : snde
+      left : -0.5
+      maximum : -0.1
+      right : 0
+    - name : zde
+      left : -0.1
+      maximum : 0
+      right : 0.1
+    - name : spde
+      left : 0
+      maximum : 0.1
+      right : 0.5
+    - name : lpde
+      left : 0.1
+      maximum : 0.5
+      right : 10
+
+outputVar1MFS : 
+    - name : mf1
+      value : -5.92
+    - name : mf2
+      value : -1.92
+    - name : mf3
+      value : -0.92
+    - name : mf4
+      value : 0.08
+    - name : mf5
+      value : 4.08
+    - name : mf6
+      value : -5.46
+    - name : mf7
+      value : -1.46
+    - name : mf8
+      value : -0.46
+    - name : mf9
+      value : 0.54
+    - name : mf10
+      value : 4.54
+    - name : mf11
+      value : -5.0
+    - name : mf12
+      value : -1.0
+    - name : mf13
+      value : 0.0
+    - name : mf14
+      value : 1.0
+    - name : mf15
+      value : 5.0
+    - name : mf16
+      value : -4.54
+    - name : mf17
+      value : -0.54
+    - name : mf18
+      value : 0.46
+    - name : mf19
+      value : 1.46
+    - name : mf20
+      value : 5.46
+    - name : mf21
+      value : -4.08
+    - name : mf22
+      value : -0.08
+    - name : mf23
+      value : 0.92
+    - name : mf24
+      value : 1.92
+    - name : mf25
+      value : 5.92
+
+table1 : 
+    - rule :
+        - lne
+        - lnde
+        - mf1
+    - rule :
+        - lne
+        - snde
+        - mf2
+    - rule :
+        - lne
+        - zde
+        - mf3
+    - rule :
+        - lne
+        - spde
+        - mf4
+    - rule :
+        - lne
+        - lpde
+        - mf5
+    - rule :
+        - sne
+        - lnde
+        - mf6
+    - rule :
+        - sne
+        - snde
+        - mf7
+    - rule :
+        - sne
+        - zde
+        - mf8
+    - rule :
+        - sne
+        - spde
+        - mf9
+    - rule :
+        - sne
+        - lpde
+        - mf10
+    - rule :
+        - ze
+        - lnde
+        - mf11
+    - rule :
+        - ze
+        - snde
+        - mf12
+    - rule :
+        - ze
+        - zde
+        - mf13
+    - rule :
+        - ze
+        - spde
+        - mf14
+    - rule :
+        - ze
+        - lpde
+        - mf15
+    - rule :
+        - spe
+        - lnde
+        - mf16
+    - rule :
+        - spe
+        - snde
+        - mf17
+    - rule :
+        - spe
+        - zde
+        - mf18
+    - rule :
+        - spe
+        - spde
+        - mf19
+    - rule :
+        - spe
+        - lpde
+        - mf20
+    - rule :
+        - lpe
+        - lnde
+        - mf21
+    - rule :
+        - lpe
+        - snde
+        - mf22
+    - rule :
+        - lpe
+        - zde
+        - mf23
+    - rule :
+        - lpe
+        - spde
+        - mf24
+    - rule :
+        - lpe
+        - lpde
+        - mf25
+

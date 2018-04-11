@@ -24,10 +24,15 @@
 #include <yaml-cpp/yaml.h>
 
 #include "i2cSlaveMCU.h"
+#include "variable.h"
+#include "fuzzyOutput.h"
 #include "zmq_helpers.hpp"
 #include "ehm.h"
 
 #include "base_msgs.pb.h"
+
+
+#include "fuzzyController.h"
 
 /*! Number of bytes (reference data) sent to CASU MCU through i2c communication.
  */
@@ -62,7 +67,7 @@ public:
      *
      * @param fbc_file Firmware board configuration file
 */
-    CASU_Interface(char *fbc_file);
+    CASU_Interface(char *fbc_file, char *fzy_file);
 
     /*! Destructor.
      */
@@ -157,6 +162,9 @@ public:
      */
     void zmqSub();
 
+    void tempCtrl();
+
+
     /*!
       Method for controlling vibration amplitude and frequency
      */
@@ -168,6 +176,17 @@ public:
     void stop_vibration();
 
 private:
+
+    void setInputMFs(YAML::Node fzy);
+    void setOutputMFs(YAML::Node fzy);
+    void buildTable(YAML::Node fzy);
+    void InitFuzzyCtrl(char *fzy_file);
+
+    int inputVars, outputVars;
+    string variant, tnorm, implication, defuzzification, aggregation;
+    string emfs, demfs, ddemfs;
+
+    FuzzyController fuzzyCtrl;
 
     /*! Utiliy function for setting header timestamps
      */
@@ -208,6 +227,8 @@ private:
     float ctlPeltier_s; /*!< Latest PWM value (-100,100) set to Peltier device. */
     int airflow_s; /*!< Latest PWM value (0,100) set to the actuator producing airflow. */
     int fanCooler; /*!< Latest PWM value (0,100) set to the fan which cools the PCB and aluminium cooler. */
+
+    float pelt_ref; /*!< Peltier reference - fuzzy ctrl output */
 
     float temp_ref; /*!< Actual reference value for CASU temperature. */
     float temp_ref_rec; /*!< Set reference value for CASU temperature received from dsPIC. */
@@ -270,6 +291,8 @@ private:
     struct timeval tLoopStart, tLoopCurrent;
     struct timeval tOutputStart, tOutputCurrent;
     double elapsedTime;
+
+    float e, de;
 
 };
 

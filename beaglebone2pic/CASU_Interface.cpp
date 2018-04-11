@@ -24,9 +24,37 @@ using namespace AssisiMsg;
 using namespace boost::posix_time;
 using namespace boost::asio;
 
-CASU_Interface::CASU_Interface(char *fbc_file)
+void CASU_Interface::InitFuzzyCtrl(char *fzy_file) {
+    YAML::Node fzy = YAML::LoadFile(fzy_file);
+
+    inputVars = fzy["input_vars"].as<int>();
+    outputVars = fzy["output_vars"].as<int>();
+    variant = fzy["variant"].as<string>();
+    tnorm = fzy["tnorm"].as<string>();
+    implication = fzy["implication"].as<string>();
+    defuzzification = fzy["defuzzification"].as<string>();
+    aggregation = fzy["aggregation"].as<string>();
+
+    fuzzyCtrl.FuzzyControllerInit(inputVars, outputVars, variant, tnorm, implication, aggregation, defuzzification);
+
+    setInputMFs(fzy);
+    setOutputMFs(fzy);
+
+    buildTable(fzy);
+
+    vector<float> inputs;
+    inputs.push_back(0.4);
+    inputs.push_back(-0.6);
+
+//    vector<float> result_output;
+//    result_output = fuzzyCtrl.CalculateOutputVariantA(inputs);
+
+}
+
+CASU_Interface::CASU_Interface(char *fbc_file, char *fzy_file)
 {
 
+    InitFuzzyCtrl(fzy_file);
     YAML::Node fbc = YAML::LoadFile(fbc_file);
     casuName = fbc["name"].as<string>();
     pub_addr = fbc["pub_addr"].as<string>();
@@ -225,6 +253,7 @@ void CASU_Interface::run()
     threads.create_thread(boost::bind(&CASU_Interface::i2cComm, this));
     threads.create_thread(boost::bind(&CASU_Interface::zmqPub, this));
     threads.create_thread(boost::bind(&CASU_Interface::zmqSub, this));
+    threads.create_thread(boost::bind(&CASU_Interface::tempCtrl, this));
     threads.join_all();
 }
 
@@ -913,13 +942,14 @@ void CASU_Interface::zmqSub()
                 }
                 else printf("Received unknown temperature command");
 
+
                 if (abs(temp_ref - temp_ref_rec) > 0.1) {
                     out_i2c_buff[0] = MSG_REF_TEMP_ID;
                     int tmp = temp_ref * 10;
                     if (tmp < 0) tmp = tmp + 65536;
                     out_i2c_buff[1] = (tmp & 0x00FF);
                     out_i2c_buff[2] = (tmp & 0xFF00) >> 8;
-                    tmp = ramp_slope * 1000.0;
+                    tmp = ctlPeltier_s * 1000.0;
                     out_i2c_buff[3] = (tmp & 0x00FF);
                     out_i2c_buff[4] = (tmp & 0xFF00) >> 8;
                     this->mtxi2c_.lock();
@@ -973,6 +1003,106 @@ void CASU_Interface::zmqSub()
         }
 
         fflush(stdout);
+    }
+}
+
+void CASU_Interface::tempCtrl()
+{
+
+    vector<float> result_output;
+    e = 0;
+    de = 0;
+
+    std::string data;
+    temp_ref = 26.0;
+
+    float prev_ctrl = 0.0;
+    /* Data publishing loop */
+    result_output.push_back(1.0);
+    result_output.push_back(0.0);
+    float dufc = 0.0;
+
+    while (1) {
+
+        if ((this->temp_ref >= 26.0) and (this->temp_ref <= 36)) {
+            de = this->temp_ref - temp[T_WAX] - e;
+            e = this->temp_ref - temp[T_WAX];
+
+            vector<float> inputs;
+            inputs.push_back(e);
+            inputs.push_back(de);
+            result_output = fuzzyCtrl.CalculateOutputVariantA(inputs);
+
+            if (result_output.at(0) == 1) {
+                // Send vibration command over i2c
+                if (isnan(result_output.at(1))) {
+                    dufc = 0.0;
+                }
+                else {
+                    dufc = result_output.at(1);
+                }
+
+                if (dufc + prev_ctrl > 80) {
+                    prev_ctrl = 80.0;
+                }
+                else if (dufc + prev_ctrl < -80) {
+                    prev_ctrl = -80;
+                }
+                else {
+                    prev_ctrl = dufc + prev_ctrl;
+                }
+
+                char out_i2c_buff[5];
+                out_i2c_buff[0] = MSG_REF_TEMP_ID;
+                int tmp = temp_ref * 10;
+                if (tmp < 0) tmp = tmp + 65536;
+                out_i2c_buff[1] = (tmp & 0x00FF);
+                out_i2c_buff[2] = (tmp & 0xFF00) >> 8;
+                tmp = (prev_ctrl) * 100.0;
+                out_i2c_buff[3] = (tmp & 0x00FF);
+                out_i2c_buff[4] = (tmp & 0xFF00) >> 8;
+                this->mtxi2c_.lock();
+                status = i2cPIC.sendData(out_i2c_buff, 5);
+                this->mtxi2c_.unlock();
+
+                cout << "dufc " << dufc << endl;
+                cout << "ufc " << prev_ctrl << endl;
+                //prev_ctrl = (dufc + prev_ctrl);
+            }
+            else {
+                prev_ctrl = 0.0;
+                cout << "INVALID FUZZY CTRL" << endl;
+                char out_i2c_buff[5];
+                out_i2c_buff[0] = MSG_REF_TEMP_ID;
+                int tmp = temp_ref * 10;
+                if (tmp < 0) tmp = tmp + 65536;
+                out_i2c_buff[1] = (tmp & 0x00FF);
+                out_i2c_buff[2] = (tmp & 0xFF00) >> 8;
+                tmp = (prev_ctrl) * 100.0;
+                out_i2c_buff[3] = (tmp & 0x00FF);
+                out_i2c_buff[4] = (tmp & 0xFF00) >> 8;
+                this->mtxi2c_.lock();
+                status = i2cPIC.sendData(out_i2c_buff, 5);
+                this->mtxi2c_.unlock();
+
+            }
+        }
+        else {
+            prev_ctrl = 0.0;
+            char out_i2c_buff[5];
+            out_i2c_buff[0] = MSG_REF_TEMP_ID;
+            int tmp = temp_ref * 10;
+            if (tmp < 0) tmp = tmp + 65536;
+            out_i2c_buff[1] = (tmp & 0x00FF);
+            out_i2c_buff[2] = (tmp & 0xFF00) >> 8;
+            tmp = (prev_ctrl) * 100.0;
+            out_i2c_buff[3] = (tmp & 0x00FF);
+            out_i2c_buff[4] = (tmp & 0xFF00) >> 8;
+            this->mtxi2c_.lock();
+            status = i2cPIC.sendData(out_i2c_buff, 5);
+            this->mtxi2c_.unlock();
+        }
+        usleep(2000000);
     }
 }
 
@@ -1067,6 +1197,72 @@ void CASU_Interface::periodic_jobs()
     timer_vp->async_wait(boost::bind(&CASU_Interface::update_vibration_pattern, this));
     io.run();
 }
+
+void CASU_Interface::setInputMFs(YAML::Node fzy) {
+
+    vector<string> cfgFileTags;
+    cfgFileTags.push_back("inputVar1MFS");
+    cfgFileTags.push_back("inputVar2MFS");
+    cfgFileTags.push_back("inputVar3MFS");
+
+    for (int i = 0; i < inputVars; i++) {
+        YAML::Node _mfs = fzy[cfgFileTags.at(i)];
+        for (YAML::iterator it = _mfs.begin(); it != _mfs.end(); ++it) {
+            const YAML::Node& mf = *it;
+            string name = mf["name"].as<string>();
+            double left = mf["left"].as<double>();
+            double maximum = mf["maximum"].as<double>();
+            double right = mf["right"].as<double>();
+            fuzzyCtrl.inputVar.at(i).AddMF(name, left, maximum, right);
+        }
+    }
+}
+
+
+void CASU_Interface::setOutputMFs(YAML::Node fzy) {
+
+    vector<string> cfgFileTags;
+    cfgFileTags.push_back("outputVar1MFS");
+    cfgFileTags.push_back("outputVar2MFS");
+    cfgFileTags.push_back("outputVar3MFS");
+
+    for (int i = 0; i < outputVars; i++) {
+        YAML::Node _mfs = fzy[cfgFileTags.at(i)];
+        for (YAML::iterator it = _mfs.begin(); it != _mfs.end(); ++it) {
+            const YAML::Node& mf = *it;
+            string name = mf["name"].as<string>();
+            double value = mf["value"].as<double>();
+            fuzzyCtrl.outputVar.at(i).AddMF(name, value);
+            //fuzzyCtrl.ufc1.AddMF(name, value);
+        }
+    }
+}
+
+void CASU_Interface::buildTable(YAML::Node fzy) {
+
+    if (!variant.compare("A")) {
+        int rule_size = inputVars + outputVars;
+        vector<string> oneRuleVector;
+        vector<vector<string> > table;
+        YAML::Node _mfs = fzy["table1"];
+        int rulesNo = _mfs.size();
+        for (YAML::iterator it = _mfs.begin(); it != _mfs.end(); ++it) {
+            const YAML::Node& mf = *it;
+            const YAML::Node& rule = mf["rule"];
+            for (int i = 0; i < inputVars; i++) {
+                oneRuleVector.push_back(rule[i].as<string>());
+            }
+            for (int i = inputVars; i < inputVars+outputVars; i++) {
+                oneRuleVector.push_back(rule[i].as<string>());
+            }
+            table.push_back(oneRuleVector);
+            oneRuleVector.clear();
+        }
+        fuzzyCtrl.BuildTable(table);
+    }
+}
+
+
 
 /* static */ const double CASU_Interface::VIBE_FREQ_MAX = 1500.0;
 /* static */ const unsigned CASU_Interface::VIBE_AMP_MAX = 50;

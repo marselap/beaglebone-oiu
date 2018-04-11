@@ -24,13 +24,13 @@ using namespace std;
  */
 int main(int argc, char **argv) {
 
-    if (argc < 2)
+    if (argc < 3)
     {
-        cout << "Please provide the .fbc file name as the program argument." << endl;
+        cout << "Please provide the .fbc and .fzy file names as the program arguments." << endl;
         exit(1);
     }
 
-    CASU_Interface casu(argv[1]);
+    CASU_Interface casu(argv[1], argv[2]);
 
     casu.run();
 

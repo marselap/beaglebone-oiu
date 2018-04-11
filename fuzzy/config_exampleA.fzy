@@ -1,0 +1,74 @@
+input_vars : 2
+output_vars : 1
+
+# A/B
+variant : A
+
+# min/product
+tnorm : min
+
+# min/product
+implication : min
+
+# COG/COA
+defuzzification : COG
+
+# sum/max/~
+aggregation : sum
+
+inputVar1 : e
+inputVar1MFS :
+    - name : ne
+      left : -2
+      maximum : -1
+      right : 0
+    - name : ze
+      left : -1
+      maximum : 0
+      right : 1
+    - name : pe
+      left : 0
+      maximum : 1
+      right : 2
+
+inputVar2 : de
+inputVar2MFS :
+    - name : nde
+      left : -2
+      maximum : -1
+      right : 0
+    - name : zde
+      left : -1
+      maximum : 0
+      right : 1
+    - name : pde
+      left : 0
+      maximum : 1
+      right : 2
+
+outputVar1 : ufc
+outputVar1MFS :
+    - name : mf1
+      value : -1
+    - name : mf2
+      value : 5
+    - name : mf3
+      value : 1
+
+table1 :
+    - rule :
+        - pe
+        - nde
+        - mf1
+    - rule :
+        - ne
+        - zde
+        - mf2
+    - rule :
+        - pe
+        - pde
+        - mf3
+    - rule :
+        - ze
+        - nde
+        - mf2

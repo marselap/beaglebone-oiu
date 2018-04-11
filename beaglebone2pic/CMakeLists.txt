@@ -28,6 +28,7 @@ PROTOBUF_GENERATE_CPP(ProtoSources ProtoHeaders ${Proto_FILES})
 # Set up include directories
 include_directories(${CMAKE_SOURCE_DIR}/serial
                     ${CMAKE_SOURCE_DIR}/i2c
+                    ${CMAKE_SOURCE_DIR}/fuzzy
                     ${CMAKE_SOURCE_DIR}/ehm
                     ${CMAKE_BINARY_DIR}/beaglebone2pic # This is for protobuffer stuff!
                     ${ZeroMQ_INCLUDE_DIR}
@@ -39,6 +40,9 @@ set(casu_fw_SOURCES mainApp.cpp
                     ../serial/serial.cpp
                     ../i2c/i2cDevice.cpp
                     ../i2c/i2cSlaveMCU.cpp
+                    ../fuzzy/variable.cpp
+                    ../fuzzy/fuzzyOutput.cpp
+                    ../fuzzy/fuzzyController.cpp
                     ../ehm/ehm.cpp
                     ${ProtoSources})
 

@@ -1,0 +1,36 @@
+input_vars : 2
+output_vars : 2
+
+# A/B
+variant : B
+
+# min/product
+tnorm : min
+
+# min/product
+implication : min
+
+# COG/COA
+defuzzyfication : COG
+
+# sum/max/~
+aggregation : ~
+
+inputVar1 : e
+inputVar1MFS : [[ne, -2, -1, 0],
+                [ze, -1, 0, 1],
+                [pe, 0, 1, 2]]
+inputVar2 : de
+inputVar2MFS : [[nde, -2, -1, 0],
+                [zde, -1, 0, 1],
+                [pde, 0, 1, 2]]
+
+outputVar1 : ufce
+outputVar1MFS : [[mf1, 1], [mf2, 0], [mf3, -1]]
+
+outputVar2 : ufcde
+outputVar2MFS : [[mf1, 1], [mf2, 0], [mf3, -1]]
+
+table1 : [[ne, mf1], [ze, mf2], [pe, mf3]]
+
+table2 : [[nde, mf1], [zde, mf2], [pde, mf3]]
